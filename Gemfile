@@ -23,3 +23,13 @@ group :development do
   gem 'spring'
 end
 
+gem 'dotenv-rails'
+
+gem 'kintone'
+
+gem 'oauth2'
+gem 'faraday'
+gem 'faraday_middleware'
+gem 'httpauth'
+
+
