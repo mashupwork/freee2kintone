@@ -7,6 +7,6 @@ class SessionsController < ApplicationController
 
   def callback
     Freee.freee(params[:code])
-    redirect_to '/freee'
+    redirect_to '/'
   end
 end

@@ -6,9 +6,10 @@ class Freee
   end
 
   def self.company_id
-    self.freee.get(
-      '/api/1/users/me?companies=true'
-    ).parsed['user']['companies'].first['id'].to_i
+    return ENV['FREEE_COMPANY_ID'].to_i
+    #self.freee.get(
+    #  '/api/1/users/me?companies=true'
+    #).parsed['user']['companies'].first['id'].to_i
   end
 
   def self.check(model, params=[])
