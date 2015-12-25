@@ -44,9 +44,9 @@ module FreeeSync
         params = {}
         self.column_names.each do |column_name|
           unless [:created_at, :updated_at].include?(column_name.to_sym)
-            val = raw_data[key]
+            val = raw_data[column_name]
             params[column_name.to_sym] = val
-            puts "key is #{key}"
+            puts "key is #{column_name}"
             puts "val is #{val}"
           end
         end
