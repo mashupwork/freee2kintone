@@ -1,6 +1,8 @@
 class Freee
   def self.sync
-    %w(account_item partner bank walletable wallet_txn transfer deal).each do |name|
+    #names = %w(account_item partner bank walletable wallet_txn transfer deal)
+    names = %w(bank walletable wallet_txn)
+    names.each do |name|
       name.camelcase.constantize.sync
     end
   end
