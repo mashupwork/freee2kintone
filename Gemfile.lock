@@ -63,6 +63,8 @@ GEM
       faraday (>= 0.7.4, < 0.10)
     globalid (0.3.6)
       activesupport (>= 4.1.0)
+    haml (4.0.7)
+      tilt
     httpauth (0.2.1)
     i18n (0.7.0)
     jbuilder (2.3.2)
@@ -186,6 +188,7 @@ DEPENDENCIES
   dotenv-rails
   faraday
   faraday_middleware
+  haml
   httpauth
   jbuilder (~> 2.0)
   jquery-rails
