@@ -21,7 +21,7 @@ KINTONE_APP='**'
 * powder open
 * access http://freee2kintone.dev/login
 
-## execute
+# execute
 
 * `rails c`
 * `Freee.sync #Freeeのデータをローカルに保存`
