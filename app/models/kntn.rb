@@ -28,7 +28,7 @@ class Kntn
   end
 
   def remove
-    query = 'limit 100' # 500以上にしたらエラーになる(削除が一度に100件しかできないので100にしてある）
+    query = 'limit 100' # 500以上にしたらエラーになる(削除が一度に100件しかできない）
     records = @api.records.get(@app, query, [])['records']
     is_retry = true if records.present? && records.count >= 100
     ids = records.map{|r| r['$id']['value'].to_i}
