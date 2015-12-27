@@ -1,4 +1,6 @@
-# vim .env
+# Install
+
+## vim .env
 
 ```
 FREEE_CLIENT_ID='***'
@@ -12,12 +14,15 @@ KINTONE_PASS='****'
 KINTONE_APP='**'
 ```
 
-# save freee token
+## next
 * bundle install
 * rake db:setup
 * powder link
 * powder open
 * access http://freee2kintone.dev/login
+
+## execute
+
 * `rails c`
 * `Freee.sync #Freeeのデータをローカルに保存`
 * `Kntn.sync #ローカルに保存されたFreeeのデータをkintoneにアップロード`
