@@ -3,15 +3,13 @@
 ## vim .env
 
 ```
-FREEE_CLIENT_ID='***'
-FREEE_SECRET_KEY='***'
-FREEE_CALLBACK_URL='http://freee2kintone.dev/callback'
-FREEE_COMPANY_ID='9999'
+FREEE_KEY='***'
+FREEE_SECRET='***'
+FREEE_KINTONE_APP='**'
 
 KINTONE_HOST='****.cybozu.com'
 KINTONE_USER='****'
 KINTONE_PASS='****'
-KINTONE_APP='**'
 ```
 
 ## next
@@ -19,10 +17,15 @@ KINTONE_APP='**'
 * rake db:setup
 * powder link
 * powder open
-* access http://freee2kintone.dev/login
+* access http://freee2kintone.dev/#{provider}/login
+* rails c
 
 # execute
 
-* `rails c`
-* `Freee.sync #Freeeのデータをローカルに保存`
-* `Kntn.sync #ローカルに保存されたFreeeのデータをkintoneにアップロード`
+## Freee
+
+* `Freee.sync`
+
+## TimeCrowd
+
+* `Timecrowd.sync`

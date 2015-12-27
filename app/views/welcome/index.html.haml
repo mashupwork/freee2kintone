@@ -1,0 +1,6 @@
+
+- flash.each do |name, msg|
+  %div= msg
+
+- ['freee'].each do |provider|
+  = link_to "login via #{provider}", "/auth/#{provider}"

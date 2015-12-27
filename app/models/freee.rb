@@ -1,41 +1,82 @@
 class Freee
-  def self.sync
-    #names = %w(account_item partner bank walletable wallet_txn transfer deal)
-    names = %w(bank walletable wallet_txn)
-    names.each do |name|
-      name.camelcase.constantize.sync
+  def self.sync(refresh=false)
+    Kntn.new(15).remove if refresh
+    f = Freee.new
+    f.sync
+  end
+
+  def initialize
+    @company_id = company_id
+    @walletable_names = walletable_names
+  end
+
+  def sync
+    id = ENV['FREEE_KINTONE_APP'].to_i
+    @kntn = Kntn.new(id)
+    @freee = Freee.new
+    offset = 0
+    items = @freee.wallet_txns
+    while(items.count >= 100) do
+      items.each do |item|
+        kintone(item)
+      end
+      offset += 100 
+      items = @freee.wallet_txns(offset)
     end
   end
 
-  def self.company_id
-    return ENV['FREEE_COMPANY_ID'].to_i
-    #self.freee.get(
-    #  '/api/1/users/me?companies=true'
-    #).parsed['user']['companies'].first['id'].to_i
+  def walletable_name walletable_id
+    @walletable_names[walletable_id]
   end
 
-  def self.check(model, params=[])
-    plural = model.to_s.split('::').last.underscore.pluralize
-    url = "/api/1/#{plural}.json?limit=100"
-    params.each do |key, val|
-      url += "&#{key}=#{val}"
+  def kintone item
+    record = {}
+    item.keys.each do |column_name|
+      next if ['created_at', 'updated_at'].include?(column_name)
+      key = column_name.gsub(/_id$/, '_name')
+      if column_name.match(/_id$/)
+        val = walletable_name(item[column_name])
+      else
+        val = item[column_name]
+        val = val * (-1) if column_name.match(/amount/) && item['entry_side'] == 'expense'
+      end
+      record[key] = {value: val}
     end
+    @kntn.save(record)
+  end
+
+  def walletable_names
+    url = "/api/1/walletables.json?company_id=#{@company_id}"
     puts "url is #{url}"
-    self.freee.get(
+    res = {}
+    walletables = api.get(
       url
-    ).parsed[plural]
-  end
-
-  def self.fetch(model, param=[])
-    self.check(model, param).each do |item|
-      model.import(item)
+    ).parsed['walletables']
+    walletables.each do |walletable|
+      res[walletable['id']] = walletable['name']
     end
+    res
   end
 
-  def self.freee(code=nil)
+  def wallet_txns(offset=0)
+    url = "/api/1/wallet_txns.json?limit=100&company_id=#{@company_id}"
+    url += "&offset=#{offset}"
+    puts "url is #{url}"
+    api.get(
+      url
+    ).parsed['wallet_txns']
+  end
+
+  def company_id
+   api.get(
+    '/api/1/users/me?companies=true'
+  ).parsed['user']['companies'].first['id'].to_i
+  end
+
+  def api(code=nil, callback_url=nil)
     client = OAuth2::Client.new(
-      ENV['FREEE_CLIENT_ID'],
-      ENV['FREEE_SECRET_KEY'],
+      ENV['FREEE_KEY'],
+      ENV['FREEE_SECRET'],
       {
         site: 'https://api.freee.co.jp/',
         authorize_url: '/oauth/authorize',
@@ -51,8 +92,8 @@ class Freee
       headers: {
         'Content-Type' => 'application/json',
         'Authorization' => HTTPAuth::Basic.pack_authorization(
-          ENV['FREEE_CLIENT_ID'],
-          ENV['FREEE_SECRET_KEY'],
+          ENV['FREEE_KEY'],
+          ENV['FREEE_SECRET'],
         )
       }
     }
@@ -61,7 +102,7 @@ class Freee
         grant_type: 'authorization_code',
         #redirect_uri: YOUR_REDIRECT_URI,
         #redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
-        redirect_uri: ENV['FREEE_CALLBACK_URL'],
+        redirect_uri: callback_url,
         code: code
       })
     else
