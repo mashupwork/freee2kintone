@@ -6,8 +6,8 @@ class Timecrowd
     @kntn = Kntn.new(id)
 
     self.client = OAuth2::Client.new(
-      ENV['TIMECROWD_CLIENT_ID'],
-      ENV['TIMECROWD_SECRET_KEY'],
+      ENV['TIMECROWD_KEY'],
+      ENV['TIMECROWD_SECRET'],
       site: 'https://timecrowd.net',
       ssl: { verify: false }
     )

@@ -5,10 +5,15 @@ class SessionsController < ApplicationController
     redirect_to url
   end
 
+  def timecrowd_callback
+    redirect_to :root
+  end
+
   def callback
-    raise params[:provider].inspect
-    
     provider = params[:provider]
+
+    raise provider.inspect
+
     case provider
     when 'freee'
       url = request.url
@@ -18,10 +23,10 @@ class SessionsController < ApplicationController
     when 'timecrowd'
   
     end
-    redirect_to '/', notice: "ログイン完了(from #{provider})"
+    redirect_to :root, notice: "ログイン完了(from #{provider})"
   end
 
   def failure
-    raise request.inspect
+    raise request.env.inspect
   end
 end

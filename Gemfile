@@ -35,4 +35,4 @@ gem 'faraday'
 gem 'faraday_middleware'
 gem 'httpauth'
 
-gem 'omniauth-timecrowd', github: 'pandeiro245/omniauth-timecrowd', branch: 'issue-1'
+gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
