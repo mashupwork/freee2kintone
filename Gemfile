@@ -37,3 +37,5 @@ gem 'httpauth'
 
 gem 'omniauth-oauth2', '1.3.1'
 gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
+gem 'omniauth-misoca', path: '../omniauth-misoca'
+#gem 'omniauth-misoca', github: 'pandeiro245/omniauth-misoca'
