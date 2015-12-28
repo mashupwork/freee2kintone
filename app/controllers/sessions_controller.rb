@@ -17,12 +17,8 @@ class SessionsController < ApplicationController
       url = url.split('?code=').first
       f = Freee.new
       f.api(params[:code], url)
-    when 'timecrowd'
-      auth_hash = request.env['omniauth.auth']
-      %w(expires_at refresh_token token).each do |key|
-        val = auth_hash.credentials.send(key)
-        File.open("tmp/timecrowd_#{key}.txt", 'w') { |file| file.write(val) }
-      end
+    else
+      save_token(provider, request.env['omniauth.auth'])
     end
     redirect_to :root, notice: "ログイン完了(from #{provider})"
   end
@@ -30,4 +26,12 @@ class SessionsController < ApplicationController
   def failure
     raise request.env.inspect
   end
+
+  private
+    def save_token provider, auth_hash
+      %w(expires_at refresh_token token).each do |key|
+        val = auth_hash.credentials.send(key)
+        File.open("tmp/#{provider}_#{key}.txt", 'w') { |file| file.write(val) }
+      end
+    end
 end
