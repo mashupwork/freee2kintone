@@ -11,9 +11,6 @@ class SessionsController < ApplicationController
 
   def callback
     provider = params[:provider]
-
-    raise provider.inspect
-
     case provider
     when 'freee'
       url = request.url
@@ -21,7 +18,11 @@ class SessionsController < ApplicationController
       f = Freee.new
       f.api(params[:code], url)
     when 'timecrowd'
-  
+      auth_hash = request.env['omniauth.auth']
+      %w(expires_at refresh_token token).each do |key|
+        val = auth_hash.credentials.send(key)
+        File.open("tmp/timecrowd_#{key}.txt", 'w') { |file| file.write(val) }
+      end
     end
     redirect_to :root, notice: "ログイン完了(from #{provider})"
   end
