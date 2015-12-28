@@ -29,11 +29,18 @@ gem 'haml'
 
 gem 'kintone'
 
-# for freee
+# for freee and misoca
 gem 'oauth2'
+
+# for freee
 gem 'faraday'
 gem 'faraday_middleware'
 gem 'httpauth'
 
+# for misoca
+gem 'shotgun'
+
 gem 'omniauth-oauth2', '1.3.1'
 gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
+#gem 'omniauth-misoca', path: '../omniauth-misoca'
+#gem 'omniauth-misoca', github: 'pandeiro245/omniauth-misoca'

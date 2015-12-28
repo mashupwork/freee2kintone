@@ -1,10 +1,5 @@
 class Freee
-  def self.sync(refresh=false)
-    Kntn.new(15).remove if refresh
-    f = Freee.new
-    f.sync
-  end
-
+  include KntnSync
   def initialize
     @company_id = company_id
     @walletable_names = walletable_names

@@ -2,6 +2,6 @@
 - flash.each do |name, msg|
   %div= msg
 
-- ['timecrowd', 'freee'].each do |provider|
+- %w(misoca timecrowd freee).each do |provider|
   %div
     = link_to "login via #{provider}", "/auth/#{provider}"
