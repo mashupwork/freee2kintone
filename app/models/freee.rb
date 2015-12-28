@@ -1,6 +1,7 @@
 class Freee
   def self.sync(refresh=false)
-    Kntn.new(15).remove if refresh
+    id = ENV['FREEE_KINTONE_APP'].to_i
+    Kntn.new(id).remove if refresh
     f = Freee.new
     f.sync
   end
