@@ -29,9 +29,11 @@ gem 'haml'
 
 gem 'kintone'
 
+# for freee
 gem 'oauth2'
 gem 'faraday'
 gem 'faraday_middleware'
 gem 'httpauth'
 
-
+gem 'omniauth-oauth2', '1.3.1'
+gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
