@@ -1,16 +1,12 @@
 class Misoca
   include KntnSync
-  def initialize
-    @client = OAuth2::Client.new(
-      ENV['MISOCA_KEY'],
-      ENV['MISOCA_SECRET'],
+
+  def self.setting
+    {
       site: 'https://app.misoca.jp/api/v1/',
       authorize_url: 'https://app.misoca.jp/oauth2/authorize',
       token_url: 'https://app.misoca.jp/oauth2/token'
-    )
-    #id = ENV['MISOCA_KINTONE_APP']
-    id = 20
-    @kntn = Kntn.new(id)
+    }
   end
 
   def sync
@@ -27,12 +23,14 @@ class Misoca
   def kintones items
     puts 'kintones'
     items.each do |item|
+      next if [647032].include?(item['id'])
       invoice = invoice(item['id'])
       param = {
         id: item['id'],
         recipient_name: item['recipient_name'],
         issue_date: item['issue_date'],
-        final_total_price: invoice['final_total_price']
+        final_total_price: invoice['final_total_price'],
+        invoice_status: invoice['invoice_status']
       }
       kintone(param)
     end
@@ -61,21 +59,8 @@ class Misoca
     access_token.get(url).parsed
   end
 
-  def client
-    @client
-  end
-
   def access_token
     token = Misoca.get 'token'
     OAuth2::AccessToken.new(@client, token)
   end
-
-  private
-    def self.get key
-      File.open("tmp/misoca_#{key}.txt", 'r').read
-    end
-
-    def self.set key, val
-      File.open("tmp/misoca_#{key}.txt", 'w') { |file| file.write(val) }
-    end
 end

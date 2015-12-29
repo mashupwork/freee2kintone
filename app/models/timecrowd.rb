@@ -5,6 +5,9 @@ class Timecrowd
   def initialize
     id = ENV['TIMECROWD_KINTONE_APP'].to_i
     @kntn = Kntn.new(id)
+    #id2 = ENV['TIMECROWD_KINTONE_APP2'].to_i
+    id2 =35 
+    @kntn2 = Kntn.new(id2)
 
     self.client = OAuth2::Client.new(
       ENV['TIMECROWD_KEY'],
@@ -29,8 +32,13 @@ class Timecrowd
     @tc = access_token
   end
 
-  def sync(page=1)
-    entries = time_entries(page)
+  def sync(task_page=1, entry_page=1)
+    sync_tasks(task_page)
+    sync_entries(entry_page)
+  end
+
+  def sync_entries(page=1)
+    entries = @tc.time_entries(page)
     while entries.present?
       entries.each_with_index do |time_entry, i|
         id = time_entry['id']
@@ -58,14 +66,51 @@ class Timecrowd
     end
   end
 
+  def sync_tasks(page=1)
+    teams.each do |team|
+      tsks = tasks(team['id'], page)
+      while tsks.present?
+        tsks.each_with_index do |task, i|
+          record = {
+            id: {value: task['id']},
+            title: {value: task['title']},
+            url: {value: task['url']},
+            parent_id: {value: task['parent_id']},
+            root_id: {value: task['root_id']},
+            path: {value: task['path']},
+          }
+          puts "#{i}: saving #{task['title']}"
+          @kntn2.save(record)
+        end
+        page += 1
+        tsks = tasks(team['id'], page)
+      end
+    end
+  end
+
+  def teams
+    url = "/api/v1/user"
+    puts url
+    access_token.get(url).parsed['teams']
+  end
+
+  def tasks team_id, page = 1
+    url = "/api/v1/teams/#{team_id}/tasks"
+    url += "?page=#{page}"
+    begin
+      puts url
+      access_token.get(url).parsed
+    rescue
+      sleep 5
+      tasks(team_id, page)
+    end
+  end
+
   def time_entries page = nil
     url = '/api/v1/time_entries'
     url += "?page=#{page}" unless page.nil?
     puts url
     access_token.get(url).parsed
   end
-
-
-
 end
 
