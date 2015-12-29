@@ -31,6 +31,9 @@ module KntnSync
             if key.match(/_at$/) && item[key].to_i > 0
               val = Time.at(val.to_i)
               record[key] = {value: val}
+            elsif key.match(/^is_/)
+              val = val == true ? 1 : 0
+              record[key] = {value: val}
             elsif val.class == Hash
               val.keys.each do |k|
                 record["#{key}_#{k}"] = {value: val[k]}
@@ -50,9 +53,12 @@ module KntnSync
             @kntn.save(record)
           end
         end
-        params[:page] = 1 unless params[:page]
-        params[:page] += 1
-        items = self.send(method_name, params)
+        if params[:page]
+          params[:page] += 1
+          items = self.send(method_name, params)
+        else
+          return
+        end
       end
     end
 
@@ -77,7 +83,8 @@ module KntnSync
       begin
         puts "url is #{url}"
         access_token.get(url).parsed
-      rescue
+      rescue=>e
+        raise e.inspect
         sleep 5
         fetch url
       end

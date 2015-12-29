@@ -42,6 +42,7 @@ gem 'shotgun'
 
 gem 'omniauth-oauth2', '1.3.1'
 gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
+gem 'omniauth-ruffnote', github: 'ruffnote/omniauth-ruffnote'
 #gem 'omniauth-misoca', path: '../omniauth-misoca'
 #gem 'omniauth-misoca', github: 'pandeiro245/omniauth-misoca'
 
