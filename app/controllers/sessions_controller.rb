@@ -10,7 +10,6 @@ class SessionsController < ApplicationController
     m = Misoca.new
     authorize_url = m.client.auth_code.authorize_url(
       redirect_uri: redirect_uri,
-      #scope: 'read'
       scope: 'write'
     )
     redirect_to authorize_url
@@ -36,7 +35,6 @@ class SessionsController < ApplicationController
         params[:code],
         redirect_uri: url
       )
-      #session[:token] = access_token.token
       File.open("tmp/#{provider}_token.txt", 'w') { |file| file.write(access_token.token) }
     else
       save_token(provider, request.env['omniauth.auth'])
@@ -46,7 +44,6 @@ class SessionsController < ApplicationController
 
   def failure
     raise request.env.inspect
-    #raise request.env['omniauth.auth'].inspect
   end
 
   private
