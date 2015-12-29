@@ -21,7 +21,7 @@ module KntnSync
       OAuth2::AccessToken.new(@client, token)
     end
 
-    def kntn_loop(method_name, params)
+    def kntn_loop(method_name, params={})
       items = self.send(method_name, params)
       while items.present?
         items.each_with_index do |item, i|
