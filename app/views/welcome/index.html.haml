@@ -2,6 +2,7 @@
 - flash.each do |name, msg|
   %div= msg
 
-- %w(misoca timecrowd freee).each do |provider|
+- ENV.select{|i| i.match(/_KEY/)}.each do |key, val|
+  - provider = key.gsub(/_KEY/, '').downcase
   %div
     = link_to "login via #{provider}", "/auth/#{provider}"
