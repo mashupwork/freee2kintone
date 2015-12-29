@@ -27,9 +27,20 @@ module KntnSync
         items.each_with_index do |item, i|
           record = {}
           item.keys.each do |key|
-            record[key] = {value: item[key]}
+            val = item[key]
+            if key.match(/_at$/) && item[key].to_i > 0
+              val = Time.at(val.to_i)
+              record[key] = {value: val}
+            elsif val.class == Hash
+              val.keys.each do |k|
+                record["#{key}_#{k}"] = {value: val[k]}
+                record["#{k}"] = {value: val[k]}
+              end
+            else
+              record[key] = {value: val}
+            end
           end
-          name = item['name'] || item['title'] || ['id'] || '名称不明'
+          name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           if app = params[:kntn_app]
             id = ENV["#{self.class.to_s.upcase}_KINTONE_APP#{app}"].to_i
@@ -63,8 +74,13 @@ module KntnSync
     end
 
     def fetch url
-      puts "url is #{url}"
-      access_token.get(url).parsed
+      begin
+        puts "url is #{url}"
+        access_token.get(url).parsed
+      rescue
+        sleep 5
+        fetch url
+      end
     end
 
     def self.get key
