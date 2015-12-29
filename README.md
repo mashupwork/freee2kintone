@@ -22,10 +22,5 @@ KINTONE_PASS='****'
 
 # execute
 
-## Freee
+* `ModelName.sync`
 
-* `Freee.sync`
-
-## TimeCrowd
-
-* `Timecrowd.sync`

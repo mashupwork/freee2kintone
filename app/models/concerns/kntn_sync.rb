@@ -9,10 +9,40 @@ module KntnSync
         ENV["#{upcase}_SECRET"],
         site: setting[:site],
         authorize_url: setting[:authorize_url],
-        token_url: setting[:token_url]
+        token_url: setting[:token_url],
+        ssl: { verify: false }
       )
-      id = ENV["#{self.to_s.upcase}_KINTONE_APP"]
+      id = ENV["#{self.class.to_s.upcase}_KINTONE_APP"]
       @kntn = Kntn.new(id)
+    end
+
+    def access_token
+      token = self.class.get 'token'
+      OAuth2::AccessToken.new(@client, token)
+    end
+
+    def kntn_loop(method_name, params)
+      items = self.send(method_name, params)
+      while items.present?
+        items.each_with_index do |item, i|
+          record = {}
+          item.keys.each do |key|
+            record[key] = {value: item[key]}
+          end
+          name = item['name'] || item['title'] || ['id'] || '名称不明'
+          puts "#{i}: saving #{name}"
+          if app = params[:kntn_app]
+            id = ENV["#{self.class.to_s.upcase}_KINTONE_APP#{app}"].to_i
+            k = Kntn.new(id)
+            k.save(record)
+          else
+            @kntn.save(record)
+          end
+        end
+        params[:page] = 1 unless params[:page]
+        params[:page] += 1
+        items = self.send(method_name, params)
+      end
     end
 
     def self.sync(refresh=false)
@@ -30,6 +60,11 @@ module KntnSync
 
     def client
       @client
+    end
+
+    def fetch url
+      puts "url is #{url}"
+      access_token.get(url).parsed
     end
 
     def self.get key

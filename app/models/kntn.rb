@@ -12,7 +12,17 @@ class Kntn
   end
 
   def save record
-    @api.record.register(@app_id, record)
+    begin
+      @api.record.register(@app_id, record)
+    rescue
+      sleep 5
+      save record
+    end
+  end
+
+  def save! record
+    res = save(record)
+    res['message'] ? raise(res.inspect) : res
   end
 
   def remove

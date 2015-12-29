@@ -49,18 +49,10 @@ class Misoca
   end
 
   def invoice(id)
-    url = "/api/v1/invoice/#{id}"
-    access_token.get(url).parsed
+    fetch "/api/v1/invoice/#{id}"
   end
 
   def invoices(offset=0)
-    puts "offset is #{offset}"
-    url = "/api/v1/invoices/?limit=80&offset=#{offset}"
-    access_token.get(url).parsed
-  end
-
-  def access_token
-    token = Misoca.get 'token'
-    OAuth2::AccessToken.new(@client, token)
+    fetch "/api/v1/invoices/?limit=80&offset=#{offset}"
   end
 end

@@ -1,40 +1,17 @@
 class Timecrowd
   include KntnSync
-  attr_accessor :client, :access_token
 
-  def initialize
-    id = ENV['TIMECROWD_KINTONE_APP'].to_i
-    @kntn = Kntn.new(id)
-    #id2 = ENV['TIMECROWD_KINTONE_APP2'].to_i
-    id2 =35 
-    @kntn2 = Kntn.new(id2)
-
-    self.client = OAuth2::Client.new(
-      ENV['TIMECROWD_KEY'],
-      ENV['TIMECROWD_SECRET'],
+  def self.setting
+    {
       site: 'https://timecrowd.net',
-      ssl: { verify: false }
-    )
-    self.access_token = OAuth2::AccessToken.new(
-      client,
-      File.open("tmp/timecrowd_token.txt", 'r').read,
-      refresh_token: File.open("tmp/timecrowd_refresh_token.txt", 'r').read,
-      expires_at: File.open("tmp/timecrowd_expires_at.txt", 'r').read
-    )
-
-    #self.access_token = access_token.refresh! if self.access_token.expired?
-    self.access_token = access_token.refresh!
-
-    %w(expires_at refresh_token token).each do |key|
-      val = self.access_token.send(key)
-      File.open("tmp/timecrowd_#{key}.txt", 'w') { |file| file.write(val) }
-    end
-    @tc = access_token
+      authorize_url: nil,
+      token_url: nil
+    }
   end
 
-  def sync(task_page=1, entry_page=1)
-    sync_tasks(task_page)
-    sync_entries(entry_page)
+  def sync
+    sync_tasks
+    sync_entries
   end
 
   def sync_entries(page=1)
@@ -68,49 +45,31 @@ class Timecrowd
 
   def sync_tasks(page=1)
     teams.each do |team|
-      tsks = tasks(team['id'], page)
-      while tsks.present?
-        tsks.each_with_index do |task, i|
-          record = {
-            id: {value: task['id']},
-            title: {value: task['title']},
-            url: {value: task['url']},
-            parent_id: {value: task['parent_id']},
-            root_id: {value: task['root_id']},
-            path: {value: task['path']},
-          }
-          puts "#{i}: saving #{task['title']}"
-          @kntn2.save(record)
-        end
-        page += 1
-        tsks = tasks(team['id'], page)
-      end
+      kntn_loop('tasks', {team_id: team['id'], page: page, kntn_app: 2})
     end
   end
 
-  def teams
-    url = "/api/v1/user"
-    puts url
-    access_token.get(url).parsed['teams']
+  def me
+    fetch "/api/v1/user"
   end
 
-  def tasks team_id, page = 1
-    url = "/api/v1/teams/#{team_id}/tasks"
-    url += "?page=#{page}"
+  def teams
+    me['teams']
+  end
+
+  def tasks params
+    team_id = params[:team_id]
+    page    = params[:page] || 1
     begin
-      puts url
-      access_token.get(url).parsed
+      fetch "/api/v1/teams/#{team_id}/tasks?page=#{page}"
     rescue
       sleep 5
       tasks(team_id, page)
     end
   end
 
-  def time_entries page = nil
-    url = '/api/v1/time_entries'
-    url += "?page=#{page}" unless page.nil?
-    puts url
-    access_token.get(url).parsed
+  def entries page = 1
+    fetch "/api/v1/time_entries?page=#{page}"
   end
 end
 
