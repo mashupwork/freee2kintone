@@ -46,3 +46,4 @@ gem 'omniauth-timecrowd', github: 'ruffnote/omniauth-timecrowd'
 #gem 'omniauth-misoca', github: 'pandeiro245/omniauth-misoca'
 
 gem 'omniauth-github'
+gem 'omniauth-trello'
