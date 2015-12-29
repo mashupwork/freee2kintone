@@ -1,4 +1,8 @@
 class Kntn
+  def self.remove(app_id)
+    Kntn.new(app_id).remove
+  end
+
   def initialize(app_id)
     host = ENV['KINTONE_HOST']
     user = ENV['KINTONE_USER']
@@ -8,7 +12,17 @@ class Kntn
   end
 
   def save record
-    @api.record.register(@app_id, record)
+    begin
+      @api.record.register(@app_id, record)
+    rescue
+      sleep 5
+      save record
+    end
+  end
+
+  def save! record
+    res = save(record)
+    res['message'] ? raise(res.inspect) : res
   end
 
   def remove
@@ -18,6 +32,7 @@ class Kntn
 
     records = @api.records.get(@app_id, query, [])['records']
     is_retry = true if records.present? && records.count >= 100
+    return 'no records' if records.blank?
     ids = records.map{|r| r['$id']['value'].to_i}
     puts 'start to delete'
     @api.records.delete(@app_id, ids)
