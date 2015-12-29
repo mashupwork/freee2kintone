@@ -1,4 +1,5 @@
 class Timecrowd
+  include KntnSync
   attr_accessor :client, :access_token
 
   def initialize
@@ -28,12 +29,8 @@ class Timecrowd
     @tc = access_token
   end
 
-  def self.sync
-    self.new.sync 
-  end
-
   def sync(page=1)
-    entries = @tc.time_entries(page)
+    entries = time_entries(page)
     while entries.present?
       entries.each_with_index do |time_entry, i|
         id = time_entry['id']
@@ -57,7 +54,7 @@ class Timecrowd
         @kntn.save(record)
       end
       page += 1
-      entries = @tc.time_entries(page)
+      entries = time_entries(page)
     end
   end
 
