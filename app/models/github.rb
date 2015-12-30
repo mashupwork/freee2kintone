@@ -18,9 +18,7 @@ class Github
   end
 
   def issues params
-    #page = params[:page] || 1
-    #fetch "/issues?page=#{page}"
-    #fetch "/issues"
-    fetch 'https://api.github.com/issues'
+    page = params[:page] || 1
+    fetch "/issues?page=#{page}"
   end
 end
