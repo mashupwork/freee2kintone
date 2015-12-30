@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/pandeiro245/kintone.git
-  revision: e4a69f59c705de18473c0d2f044f6e0346666197
+  revision: 86a34cc3afda5d09d4871f73a84572498a47b5a4
   branch: develop
   specs:
 

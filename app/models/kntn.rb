@@ -1,7 +1,7 @@
 class Kntn
-  def self.create! name
+  def self.create!(name, fields=nil)
     k = Kntn.new
-    k.create!(name)
+    k.create!(name, fields)
   end
 
   def self.remove(app_id)
@@ -16,8 +16,12 @@ class Kntn
     @api = Kintone::Api.new(host, user, pass)
   end
 
-  def create! name
-    @api.app.register(name)
+  def api
+    @api
+  end
+
+  def create!(name, fields=nil)
+    @api.app.register(name, fields)
   end
 
   def deploy

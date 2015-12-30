@@ -4,6 +4,7 @@ module KntnSync
     def initialize
       setting = self.class.setting
       upcase = self.to_s.upcase
+      downcase = self.to_s.downcase
       @client = OAuth2::Client.new(
         ENV["#{upcase}_KEY"],
         ENV["#{upcase}_SECRET"],
@@ -12,7 +13,12 @@ module KntnSync
         token_url: setting[:token_url],
         ssl: { verify: false }
       )
-      id = ENV["#{self.class.to_s.upcase}_KINTONE_APP"]
+      if self.class.exist? downcase
+        id = self.class.get downcase
+      else
+        id = Kntn.create!("#{self.class.to_s}連携", self.field_names)[:app]
+        self.class.set downcase, 'id'
+      end
       @kntn = Kntn.new(id)
     end
 
@@ -33,7 +39,7 @@ module KntnSync
             k = Kntn.new(id)
             k.save(record)
           else
-            @kntn.save(record)
+            @kntn.save!(record)
           end
         end
         if params[:page]
@@ -93,6 +99,10 @@ module KntnSync
         sleep 5
         fetch url
       end
+    end
+
+    def self.exist? key
+      File.exist?("tmp/#{self.to_s.downcase}_#{key}.txt")
     end
 
     def self.get key
