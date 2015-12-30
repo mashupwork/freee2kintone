@@ -1,4 +1,7 @@
 Rails.application.configure do
+  # http://qiita.com/quattro_4/items/b9014889d8cf5d7db08a
+  RequireReloader.watch_local_gems!
+
   # Settings specified here will take precedence over those in config/application.rb.
 
   # In the development environment your application's code is reloaded on

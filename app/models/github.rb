@@ -19,6 +19,6 @@ class Github
 
   def issues params
     page = params[:page] || 1
-    fetch "/issues?page=#{page}"
+    fetch "/issues?page=#{page}&state=all"
   end
 end

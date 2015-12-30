@@ -25,24 +25,7 @@ module KntnSync
       items = self.send(method_name, params)
       while items.present?
         items.each_with_index do |item, i|
-          record = {}
-          item.keys.each do |key|
-            val = item[key]
-            if key.match(/_at$/) && item[key].to_i > 0
-              val = Time.at(val.to_i)
-              record[key] = {value: val}
-            elsif key.match(/^is_/)
-              val = val == true ? 1 : 0
-              record[key] = {value: val}
-            elsif val.class == Hash
-              val.keys.each do |k|
-                record["#{key}_#{k}"] = {value: val[k]}
-                record["#{k}"] = {value: val[k]}
-              end
-            else
-              record[key] = {value: val}
-            end
-          end
+          record = item2record(item)
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           if app = params[:kntn_app]
@@ -60,6 +43,28 @@ module KntnSync
           return
         end
       end
+    end
+
+    def item2record item
+      record = {}
+      item.keys.each do |key|
+        val = item[key]
+        if key.match(/_at$/) && item[key].to_i > 0
+          val = Time.at(val.to_i)
+          record[key] = {value: val}
+        elsif key.match(/^is_/)
+          val = val == true ? 1 : 0
+          record[key] = {value: val}
+        elsif val.class == Hash
+          val.keys.each do |k|
+            record["#{key}_#{k}"] = {value: val[k]}
+            record["#{k}"] = {value: val[k]}
+          end
+        else
+          record[key] = {value: val}
+        end
+      end
+      record
     end
 
     def self.sync(refresh=false)

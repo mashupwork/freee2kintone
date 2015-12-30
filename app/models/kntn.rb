@@ -1,14 +1,27 @@
 class Kntn
+  def self.create! name
+    k = Kntn.new
+    k.create!(name)
+  end
+
   def self.remove(app_id)
     Kntn.new(app_id).remove
   end
 
-  def initialize(app_id)
+  def initialize(app_id=nil)
     host = ENV['KINTONE_HOST']
     user = ENV['KINTONE_USER']
     pass = ENV['KINTONE_PASS']
     @app_id = app_id
     @api = Kintone::Api.new(host, user, pass)
+  end
+
+  def create! name
+    @api.app.register(name)
+  end
+
+  def deploy
+    @api.app.deploy(@app_id)
   end
 
   def save record

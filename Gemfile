@@ -26,8 +26,11 @@ end
 
 gem 'dotenv-rails'
 gem 'haml'
+gem 'require_reloader'
 
-gem 'kintone'
+#gem 'kintone'
+#gem 'kintone', path: '../kintone'
+gem 'kintone', path: '../kintone', github: 'pandeiro245/kintone', branch: 'develop'
 
 # for freee and misoca
 gem 'oauth2'
