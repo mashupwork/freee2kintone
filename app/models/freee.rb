@@ -56,12 +56,12 @@ class Freee
     OAuth2::AccessToken.new(client, new_token.token)
   end 
 
-  def sync
-    kntn_loop('wallet_txns')
+  def sync(offset=0)
+    kntn_loop('wallet_txns', {offset: offset})
   end
 
   def wallet_txns(params={})
-    offset = params[:offset] || 1
+    offset = params[:offset] || 0
     url = "/api/1/wallet_txns.json?company_id=#{company_id}&offset=#{offset}"
     res = fetch(url)
     res['wallet_txns'].map do |i|

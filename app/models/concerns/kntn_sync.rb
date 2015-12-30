@@ -40,7 +40,8 @@ module KntnSync
             @kntn.save(record)
           end
         end
-        params[:page] += 1
+        params[:page] += 1 if params[:page]
+        params[:offset] += items.count if params[:offset]
         self.class.set 'kintone_count', @record_count
         items = self.send(method_name, params)
       end
