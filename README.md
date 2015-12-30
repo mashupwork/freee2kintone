@@ -5,7 +5,6 @@
 ```
 FREEE_KEY='***'
 FREEE_SECRET='***'
-FREEE_KINTONE_APP='**'
 
 KINTONE_HOST='****.cybozu.com'
 KINTONE_USER='****'

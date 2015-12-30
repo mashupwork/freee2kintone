@@ -17,6 +17,7 @@ module KntnSync
         id = self.class.get downcase
         @kntn = Kntn.new(id)
       end
+      @record_count = 0
     end
 
     def access_token
@@ -27,6 +28,7 @@ module KntnSync
     def kntn_loop(method_name, params={})
       @kntn = Kntn.new(self.class.get('kintone_app')) unless @kntn
       items = self.send(method_name, params)
+      @record_count += items.count
       while items.present?
         items.each_with_index do |item, i|
           record = item2record(item)
@@ -38,12 +40,9 @@ module KntnSync
             @kntn.save(record)
           end
         end
-        if params[:page]
-          params[:page] += 1
-          items = self.send(method_name, params)
-        else
-          return
-        end
+        params[:page] += 1
+        self.class.set 'kintone_count', @record_count
+        items = self.send(method_name, params)
       end
     end
 
