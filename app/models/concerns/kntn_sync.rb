@@ -15,11 +15,8 @@ module KntnSync
       )
       if self.class.exist? downcase
         id = self.class.get downcase
-      else
-        id = Kntn.create!("#{self.class.to_s}連携", self.field_names)[:app]
-        self.class.set downcase, 'id'
+        @kntn = Kntn.new(id)
       end
-      @kntn = Kntn.new(id)
     end
 
     def access_token
@@ -28,6 +25,7 @@ module KntnSync
     end
 
     def kntn_loop(method_name, params={})
+      @kntn = Kntn.new(self.class.get('kintone_app')) unless @kntn
       items = self.send(method_name, params)
       while items.present?
         items.each_with_index do |item, i|
@@ -35,9 +33,7 @@ module KntnSync
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           if app = params[:kntn_app]
-            id = ENV["#{self.class.to_s.upcase}_KINTONE_APP#{app}"].to_i
-            k = Kntn.new(id)
-            k.save(record)
+            raise "FIXME!: #{app}".inspect
           else
             @kntn.save!(record)
           end
@@ -73,10 +69,51 @@ module KntnSync
       record
     end
 
+    def item2type key, val
+      if key.match(/_at$/)
+        'DATETIME'
+      elsif key.match(/_on$/)
+        'DATE'
+      elsif val.class == Fixnum
+        'NUMBER'
+      else
+        'SINGLE_LINE_TEXT'
+      end
+    end
+
+    def item2field_names item
+      res = {}
+      item.keys.each do |key|
+        val = item[key]
+        if val == Hash
+          val.each do |k, v|
+            key2 = "#{key}_#{k}"
+            res[key2] = {
+              code: key,
+              label: key,
+              type: item2type(k, v)
+            }
+          end
+        else
+          res[key] = {
+            code: key, 
+            label: key, 
+            type: item2type(key, val)
+          }
+          res[key][:unique] = true if key == 'id'
+        end
+      end
+      res 
+    end
+
     def self.sync(refresh=false)
-      id = ENV["#{self.to_s.upcase}_KINTONE_APP"].to_i
-      Kntn.new(id).remove if refresh
+      unless @kntn 
+        instance = self.new
+        id = Kntn.create!("#{self.to_s}連携", instance.field_names)[:app]
+        self.set 'kintone_app', id
+      end
       i = self.new
+      i.remove if refresh
       i.sync
     end
 
