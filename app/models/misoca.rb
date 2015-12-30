@@ -20,4 +20,44 @@ class Misoca
   def invoices(offset=0)
     fetch "/api/v1/invoices/?limit=80&offset=#{offset}"
   end
+
+  def field_names
+    items = invoices 
+    return nil unless items.present?
+    item = items.first
+    res = {}
+    item.keys.each do |key|
+      val = item[key]
+      if val == Hash
+        val.each do |k, v|
+          key2 = "#{key}_#{k}"
+          res[key2] = {
+            code: key,
+            label: key,
+            type: item2type(k, v)
+          }
+        end
+      else
+        res[key] = {
+          code: key, 
+          label: key, 
+          type: item2type(key, val)
+        }
+        res[key][:unique] = true if key == 'id'
+      end
+    end
+    res 
+  end
+
+  def item2type key, val
+    if key.match(/_at$/)
+      'DATETIME'
+    elsif key.match(/_on$/)
+      'DATE'
+    elsif val.class == Fixnum
+      'NUMBER'
+    else
+      'SINGLE_LINE_TEXT'
+    end
+  end
 end
