@@ -35,7 +35,7 @@ module KntnSync
           if app = params[:kntn_app]
             raise "FIXME!: #{app}".inspect
           else
-            @kntn.save!(record)
+            @kntn.save(record)
           end
         end
         if params[:page]
@@ -85,12 +85,12 @@ module KntnSync
       res = {}
       item.keys.each do |key|
         val = item[key]
-        if val == Hash
+        if val.class == Hash
           val.each do |k, v|
             key2 = "#{key}_#{k}"
             res[key2] = {
-              code: key,
-              label: key,
+              code: key2,
+              label: key2,
               type: item2type(k, v)
             }
           end
