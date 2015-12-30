@@ -21,21 +21,15 @@ class SessionsController < ApplicationController
 
   def callback
     provider = params[:provider]
-    case provider
-    when 'freee'
+    if ['freee', 'misoca'].include?(provider)
       url = request.url
       url = url.split('?code=').first
-      f = Freee.new
-      f.api(params[:code], url)
-    when 'misoca'
-      url = request.url
-      url = url.split('?code=').first
-      m = Misoca.new
-      access_token = m.client.auth_code.get_token(
+      m = provider.capitalize.constantize.new
+      token = m.api(
         params[:code],
-        redirect_uri: url
-      )
-      File.open("tmp/#{provider}_token.txt", 'w') { |file| file.write(access_token.token) }
+        url
+      ).token
+      m.class.set('token', token)
     else
       save_token(provider, request.env['omniauth.auth'])
     end
