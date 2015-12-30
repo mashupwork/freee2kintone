@@ -2,6 +2,24 @@
 - flash.each do |name, msg|
   %div= msg
 
+
+
+%hr
+%table.table.table-bordered
+  %tr
+    %th id
+    %th name
+    %th show
+    %th edit
+  - @kntn.api.apps.get.each do |app|
+    %tr
+      %td=app['appId']
+      %td=app['name']
+      %td=link_to 'show', "https://ruffnote.cybozu.com/k/#{app['appId']}", {target: '_blank'}
+      %td=link_to 'edit', "https://ruffnote.cybozu.com/k/admin/app/flow?app=#{app['appId']}", {target: '_blank'}
+
+%hr
+
 %table.table.table-bordered
   %tr
     %th provider

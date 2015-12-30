@@ -72,7 +72,7 @@ module KntnSync
     def item2type key, val
       if key.match(/_at$/)
         'DATETIME'
-      elsif key.match(/_on$/)
+      elsif key.match(/_on$/) || key == 'date'
         'DATE'
       elsif val.class == Fixnum
         'NUMBER'
