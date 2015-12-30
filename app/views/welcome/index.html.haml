@@ -2,7 +2,28 @@
 - flash.each do |name, msg|
   %div= msg
 
-- ENV.select{|i| i.match(/_KEY/)}.each do |key, val|
-  - provider = key.gsub(/_KEY/, '').downcase
-  %div
-    = link_to "login via #{provider}", "/auth/#{provider}"
+%table.table.table-bordered
+  %tr
+    %th provider
+    %th sync
+    %th kintone app id
+    %th command
+
+  - ENV.select{|i| i.match(/_KEY/)}.each do |key, val|
+    - provider = key.gsub(/_KEY/, '').downcase
+    %tr
+      %td
+        = provider.capitalize
+      %td
+        - if File.exist?("tmp/#{provider}_token.txt")
+          = 'synced'
+        - else
+          = link_to 'not synced', "/auth/#{provider}"
+      %td
+        - if File.exist?("tmp/#{provider}_kintone_app.txt")
+          - id = File.read("tmp/#{provider}_kintone_app.txt")
+          = link_to "synced (#{id})", "https://#{ENV['KINTONE_HOST']}/k/#{id}/", {target: '_blank'}
+        - else
+          = link_to 'not synced', "/auth/#{provider}"
+      %td
+        = link_to "login", "/auth/#{provider}"

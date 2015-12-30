@@ -27,6 +27,7 @@ end
 gem 'dotenv-rails'
 gem 'haml'
 gem 'require_reloader'
+gem "twitter-bootstrap-rails"
 
 #gem 'kintone'
 #gem 'kintone', path: '../kintone'
