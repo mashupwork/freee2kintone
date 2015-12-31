@@ -12,6 +12,7 @@ class Kntn
     host = ENV['KINTONE_HOST']
     user = ENV['KINTONE_USER']
     pass = ENV['KINTONE_PASS']
+    @app_id = app_id
     @api = Kintone::Api.new(host, user, pass)
   end
 
@@ -23,8 +24,14 @@ class Kntn
     @api.app.register(name, fields)
   end
 
-  def deploy app_id
+  def deploy app_id = nil
+    app_id ||= @app_id
     @api.app.deploy(app_id)
+  end
+
+  def all app_id = nil
+    app_id ||= @app_id
+    @api.records.get(app_id, '', [])['records']
   end
 
   def save app_id, record
