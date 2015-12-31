@@ -1,11 +1,11 @@
 class Cf
   def initialize
     @kntn = Kntn.new
-    @app_freee = 78
-    @freee_walletable_id = 4409
-    @app_future = 91
-    @app_all   = 89
-    @fields = ["balance"]
+    @apps = {
+      freee:  Freee.kintone_id,
+      future: ENV['KINTONE_CF_FUTURE'],
+      all:    ENV['KINTONE_CF_ALL']
+    }
   end
 
   def sync (refresh=false)
@@ -15,15 +15,15 @@ class Cf
   end
 
   def remove
-    @kntn.remove(@app_all)
+    @kntn.remove(@app[:all])
   end
 
   def sync_futures(last_balance=nil)
-    2008.upto(2016).each do |y|
-      1.upto(12).each do |m|
-        next if Date.new(y, m, 1) < Date.today
-        last_balance = save_future(year, month, last_balance)
-      end
+    month = Month.new
+    final_month = Month.new(2017, 3)
+    while(month.future?(final_month))
+      last_balance = save_future(month, last_balance)
+      month = month.next
     end
   end
 
@@ -39,25 +39,25 @@ class Cf
   end
 
   def futures
-    @kntn.app(@app_future).all
+    @kntn.app(@apps[:future]).all
   end
 
-  def save_future year, month, last_balance=nil
-    save 'future', year, month, last_balance
+  def save_future month, last_balance=nil
+    save 'future', month, last_balance
   end
 
-  def save_past year, month, last_balance=nil
-    save 'past', year, month, last_balance
+  def save_past month, last_balance=nil
+    save 'past', month, last_balance
   end
 
-  def save type='future', year, month, last_balance
-    puts "#{year}-#{month}: #{last_balance}"
-    day = Date.new(year, month, 1)
+  def save type='future', month, last_balance
+    puts "#{month.year}-#{month.month}: #{last_balance}"
+    day = month.date
     breakdown = ''
     if last_balance
       balance = last_balance
     else
-      balance = last_month_balance || 0
+      balance = month.last.balance || 0
     end
 
     if future?
@@ -71,7 +71,7 @@ class Cf
     else # past
       next_day = (day + 1.month).beginning_of_month
       query = "date < \"#{next_day}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
-      record = @kntn.api.records.get(@app_freee, query, @fields)
+      record = @kntn.api.records.get(@apps[:freee], query, [])
       return if record['records'].blank?
       balance = record['records'].first['balance']['value']
     end
@@ -84,12 +84,8 @@ class Cf
       balance: {value: balance},
       breakdown: {value: breakdown}
     }
-    @kntn.api.record.register(@app_all, record)
+    @kntn.api.record.register(@apps[:all], record)
     balance
   end
-
-  def future?(year, month)
-    day = Date.new(year, month, 1)
-    Date.today < day
-  end
 end
+
