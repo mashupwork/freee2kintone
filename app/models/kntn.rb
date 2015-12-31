@@ -54,10 +54,20 @@ class Kntn
     @api.record.update(@app_id, id.to_i, params)
   end
 
-  def calculate from_column_name='amount', to_column_name='amount_absolute', logic='absolute'
+  def calculate params
+    logic = params[:logic]
+    column_name = params[:column_name]
+    puts "logic is #{logic}"
     all.each do |record|
-      params = {}
-      params[to_column_name] = record[from_column_name]['value'].to_i.abs
+      case logic
+      when 'absolute'
+        from_column_name='amount'
+        to_column_name='amount_absolute'
+        params[to_column_name] = record[from_column_name]['value'].to_i.abs
+      when 'blank_is_forever'
+        next if record[column_name]['value'].present?
+        params[column_name] = '3000-01-01'
+      end
       id = record['$id']['value']
       update(id, params)
     end
