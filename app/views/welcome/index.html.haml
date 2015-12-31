@@ -1,8 +1,5 @@
-
 - flash.each do |name, msg|
   %div= msg
-
-
 
 %hr
 %table.table.table-bordered
@@ -24,6 +21,7 @@
   %tr
     %th provider
     %th sync
+    %th model_names
     %th kintone app id
     %th kintone records count
     %th command
@@ -38,6 +36,10 @@
           = 'synced'
         - else
           = link_to 'not synced', "/auth/#{provider}"
+      %td
+        - model_names = provider.capitalize.constantize.setting[:model_names]
+        = model_names ? model_names.join(' ,') : ''
+
       - if File.exist?("tmp/#{provider}_kintone_app.txt")
         - id = File.read("tmp/#{provider}_kintone_app.txt")
         %td

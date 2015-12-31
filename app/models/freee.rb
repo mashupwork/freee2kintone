@@ -5,7 +5,9 @@ class Freee
     {
       site: 'https://api.freee.co.jp/',
       authorize_url: '/oauth/authorize',
-      token_url: '/oauth/token'
+      token_url: '/oauth/token',
+      #model_names: ['WalletTxn', 'Walletable', 'Deal', 'Bank']
+      model_names: ['WalletTxn']
     }
   end
 
@@ -56,8 +58,11 @@ class Freee
     OAuth2::AccessToken.new(client, new_token.token)
   end 
 
-  def sync(offset=0)
-    kntn_loop('wallet_txns', {offset: offset})
+  def sync model_name
+    case model_name
+    when 'WalletTxn'
+      kntn_loop('wallet_txns', {offset: offset})
+    end
   end
 
   def wallet_txns(params={})
@@ -73,13 +78,6 @@ class Freee
       end
       i2
     end
-  end
-
-  def field_names
-    items = wallet_txns
-    return nil unless items.present?
-    item = items.first
-    item2field_names(item)
   end
 
   def company_id

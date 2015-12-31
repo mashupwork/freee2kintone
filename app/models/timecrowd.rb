@@ -4,9 +4,8 @@ class Timecrowd
   def self.setting
     {
       site: 'https://timecrowd.net',
-      authorize_url: nil,
-      token_url: nil,
-      model_names: ['Task', 'TimeEntry']
+      #model_names: ['Task', 'TimeEntry']
+      model_names: ['TimeEntry']
     }
   end
 

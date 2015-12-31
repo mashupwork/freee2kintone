@@ -35,7 +35,7 @@ module KntnSync
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           app_id = self.class.get "kintone_app_#{model_name.downcase}"
-          @kntn.save!(app_id, record)
+          @kntn.save(app_id, record)
         end
         params[:page] += 1 if params[:page]
         params[:offset] += items.count if params[:offset]
