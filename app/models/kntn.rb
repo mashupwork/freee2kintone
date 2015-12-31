@@ -24,19 +24,17 @@ class Kntn
     @api.app.register(name, fields)
   end
 
-  def deploy app_id = nil
-    app_id ||= @app_id
+  def deploy
     @api.app.deploy(app_id)
   end
 
-  def all app_id = nil
-    app_id ||= @app_id
-    @api.records.get(app_id, '', [])['records']
+  def all
+    @api.records.get(@app_id, '', [])['records']
   end
 
-  def save app_id, record
+  def save record
     begin
-      @api.record.register(app_id, record)
+      @api.record.register(@app_id, record)
     rescue
       sleep 5
       save record
@@ -46,6 +44,23 @@ class Kntn
   def save! app_id, record
     res = save(app_id, record)
     res['message'] ? raise(res.inspect) : res
+  end
+
+  def update id, record
+    params = {}
+    record.each do |k, v|
+      params[k] = {value: v}
+    end
+    @api.record.update(@app_id, id.to_i, params)
+  end
+
+  def calculate from_column_name='amount', to_column_name='amount_absolute', logic='absolute'
+    all.each do |record|
+      params = {}
+      params[to_column_name] = record[from_column_name]['value'].to_i.abs
+      id = record['$id']['value']
+      update(id, params)
+    end
   end
 
   def remove app_id
