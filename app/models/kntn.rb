@@ -20,6 +20,11 @@ class Kntn
     @api
   end
 
+  def app(app_id)
+    @app_id = app_id
+    self
+  end
+
   def create!(name, fields=nil)
     @api.app.register(name, fields)
   end
