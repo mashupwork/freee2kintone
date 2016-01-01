@@ -1,6 +1,10 @@
 class Freee
   include KntnSync
 
+  def self.kintone_id
+    self.get('kintone_app')
+  end
+
   def self.setting
     {
       site: 'https://api.freee.co.jp/',

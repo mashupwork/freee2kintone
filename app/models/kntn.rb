@@ -1,13 +1,4 @@
 class Kntn
-  def self.create!(name, fields=nil)
-    k = Kntn.new
-    k.create!(name, fields)
-  end
-
-  def self.remove(app_id)
-    Kntn.new(app_id).remove
-  end
-
   def initialize(app_id=nil)
     host = ENV['KINTONE_HOST']
     user = ENV['KINTONE_USER']
@@ -16,12 +7,21 @@ class Kntn
     @api = Kintone::Api.new(host, user, pass)
   end
 
+  def self.app_create!(name, fields=nil)
+    @api.app.register(name, fields)
+  end
+
+  def self.remove(app_id)
+    Kntn.new(app_id).remove
+  end
+
   def api
     @api
   end
 
-  def create!(name, fields=nil)
-    @api.app.register(name, fields)
+  def app(app_id)
+    @app_id = app_id
+    self
   end
 
   def deploy
@@ -29,20 +29,33 @@ class Kntn
   end
 
   def all
-    @api.records.get(@app_id, '', [])['records']
+    res = @api.records.get(@app_id, '', [])
+    res['records'].presence
+  end
+
+  def where cond
+    query = ''
+    cond.each do |k, v|
+      query += "#{k} = \"#{v.to_s}\""
+    end
+    @api.records.get(@app_id, query, [])
   end
 
   def save record
+    params = {}
+    record.each do |k, v|
+      params[k] = {value: v}
+    end
     begin
-      @api.record.register(@app_id, record)
+      @api.record.register(@app_id, params)
     rescue
       sleep 5
       save record
     end
   end
 
-  def save! app_id, record
-    res = save(app_id, record)
+  def save! record
+    res = save(record)
     res['message'] ? raise(res.inspect) : res
   end
 
@@ -73,11 +86,11 @@ class Kntn
     end
   end
 
-  def remove app_id
+  def remove app_id=nil
+    app_id ||= @app_id
     # 500以上にしたらエラーになる
     # 削除が一度に100件しかできない）
     query = 'limit 100' 
-
     records = @api.records.get(app_id, query, [])['records']
     is_retry = true if records.present? && records.count >= 100
     return 'no records' if records.blank?
