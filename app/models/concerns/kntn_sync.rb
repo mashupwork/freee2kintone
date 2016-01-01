@@ -51,18 +51,17 @@ module KntnSync
 
     def item2record item
       record = {}
-      item.keys.each do |key|
-        val = item[key]
-        if key.match(/_at$/) && item[key].to_i > 0
+      item.each do |key, val|
+        if key.match(/_at$/) && val.to_i > 0
           val = Time.at(val.to_i)
           record[key] = val
         elsif key.match(/^is_/)
           val = val == true ? 1 : 0
           record[key] = val
         elsif val.class == Hash
-          val.keys.each do |k|
+          val.each do |k, v|
             record["#{key}_#{k}"] = val[k]
-            record["#{k}"] = val[k]
+            #record["#{k}"] = val[k] # https://github.com/pandeiro245/freee2kintone/issues/62
           end
         else
           record[key] = val
