@@ -1,12 +1,15 @@
 class Cf
+  def self.sync
+    self.new.sync
+  end
+
   def initialize
     @kntn = Kntn.new
     @apps = {
-      freee:  Freee.kintone_id,
+      freee:  Freee.get('kintone_app_wallet_txns'),
       future: ENV['KINTONE_CF_FUTURE'],
       all:    ENV['KINTONE_CF_ALL']
     }
-    @freee_walletable_id = 4409 #TODO freee APIで walletable_type=bank_accountのものを自動取得する
   end
 
   def sync (refresh=false)
@@ -98,9 +101,16 @@ class Cf
   end
 
   def balance_from_freee month
-    query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
-    record = @kntn.api.records.get(@apps[:freee], query, [])['records']
-    record.present? ? record.first['balance']['value'].to_i : 0
+    balance = 0
+    Freee.new.walletables.each do |walletable|
+      walletable_id = walletable['id']
+      query = "date < \"#{month.next.date.to_s}\" and walletable_id = #{walletable_id} order by date desc limit 1"
+      record = @kntn.api.records.get(@apps[:freee], query, [])['records']
+      b = record.present? ? record.first['balance']['value'].to_i : 0
+      puts "#{walletable['name']}: #{b}"
+      balance += b
+    end
+    balance
   end
 
   def active? month, future
@@ -109,6 +119,8 @@ class Cf
     to   = future['year_month_end']['value'].to_date
     loop_type = future['loop_type']['value']
     return false unless (from <= day && to >= day) # 期間外
+    return false if loop_type.match(/来月以降/) && day == Month.new.date # 今月はfalse
+    return false if loop_type.match(/再来月以降/) && day == Month.new.next.date # 来月もfalse
     return true if ['毎月', '単発'].include?(loop_type)
     return true if loop_type == '毎年' && day.month == from.month
     return true if loop_type == '半年毎' && [from.month, (from+6.month).month].include?(day.month)

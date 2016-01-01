@@ -1,17 +1,14 @@
 class Freee
   include KntnSync
 
-  def self.kintone_id
-    self.get('kintone_app')
-  end
-
   def self.setting
     {
       site: 'https://api.freee.co.jp/',
       authorize_url: '/oauth/authorize',
       token_url: '/oauth/token',
       #model_names: ['WalletTxn', 'Walletable', 'Deal', 'Bank']
-      model_names: ['WalletTxn']
+      model_names: ['Walletable', 'WalletTxn']
+      #model_names: ['Walletable']
     }
   end
 
@@ -65,7 +62,9 @@ class Freee
   def sync model_name
     case model_name
     when 'WalletTxn'
-      kntn_loop('wallet_txns', {offset: offset})
+      kntn_loop('wallet_txns', {offset: 0})
+    when 'Walletable'
+      kntn_loop('walletables', {is_all: true})
     end
   end
 
@@ -82,6 +81,10 @@ class Freee
       end
       i2
     end
+  end
+
+  def walletables prams = {}
+    fetch("/api/1/walletables.json?company_id=#{company_id}")['walletables']
   end
 
   def company_id

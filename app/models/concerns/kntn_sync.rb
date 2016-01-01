@@ -3,8 +3,8 @@ module KntnSync
   included do
     def initialize
       setting = self.class.setting
-      upcase = self.to_s.upcase
-      downcase = self.to_s.downcase
+      upcase = self.class.to_s.upcase
+      downcase = self.class.to_s.downcase
       @client = OAuth2::Client.new(
         ENV["#{upcase}_KEY"],
         ENV["#{upcase}_SECRET"],
@@ -20,13 +20,17 @@ module KntnSync
       @record_count = 0
     end
 
+    def kntn
+      @kntn
+    end
+
     def access_token
       token = self.class.get 'token'
       OAuth2::AccessToken.new(@client, token)
     end
 
     def kntn_loop(model_name, params={})
-      @kntn = Kntn.new(self.class.get('kintone_app')) unless @kntn
+      @kntn = Kntn.new(self.class.get("kintone_app_#{model_name.underscore.pluralize}")) unless @kntn
       items = self.send(model_name, params)
       @record_count += items.count
       while items.present?
@@ -35,11 +39,12 @@ module KntnSync
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           app_id = self.class.get "kintone_app_#{model_name.downcase}"
-          @kntn.save(app_id, record)
+          @kntn.app(app_id).save(record)
         end
         params[:page] += 1 if params[:page]
         params[:offset] += items.count if params[:offset]
         self.class.set 'kintone_count', @record_count
+        return if params[:is_all]
         items = self.send(model_name, params)
       end
     end
@@ -50,17 +55,17 @@ module KntnSync
         val = item[key]
         if key.match(/_at$/) && item[key].to_i > 0
           val = Time.at(val.to_i)
-          record[key] = {value: val}
+          record[key] = val
         elsif key.match(/^is_/)
           val = val == true ? 1 : 0
-          record[key] = {value: val}
+          record[key] = val
         elsif val.class == Hash
           val.keys.each do |k|
-            record["#{key}_#{k}"] = {value: val[k]}
-            record["#{k}"] = {value: val[k]}
+            record["#{key}_#{k}"] = val[k]
+            record["#{k}"] = val[k]
           end
         else
-          record[key] = {value: val}
+          record[key] = val
         end
       end
       record
@@ -105,9 +110,12 @@ module KntnSync
 
     def self.sync(refresh=false)
       self.setting[:model_names].each do |model_name|
-        unless @kntn 
+        unless self.exist?("kintone_app_#{model_name.underscore.pluralize}")
           instance = self.new
-          id = Kntn.app_create!("#{self.to_s}::#{model_name}", instance.field_names(model_name))[:app]
+          id = Kntn.app_create!(
+            "#{self.to_s}::#{model_name}", 
+            instance.field_names(model_name)
+          )[:app]
           self.set "kintone_app_#{model_name.underscore.pluralize}", id
         end
         i = self.new
