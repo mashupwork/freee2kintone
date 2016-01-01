@@ -76,7 +76,7 @@ module KntnSync
         'DATETIME'
       elsif key.match(/_on$/) || key == 'date'
         'DATE'
-      elsif val.class == Fixnum
+      elsif val.class == Fixnum || key == 'duration'
         'NUMBER'
       else
         'SINGLE_LINE_TEXT'

@@ -80,7 +80,9 @@ class Cf
         end
       end
     else # past
-      balance = balance_from_freee(month)
+      data = balance_from_freee(month)
+      balance = data[:balance]
+      breakdown += data[:breakdown]
     end
 
     year_month =  day.to_s
@@ -102,15 +104,18 @@ class Cf
 
   def balance_from_freee month
     balance = 0
+    breakdown = ''
     Freee.new.walletables.each do |walletable|
       walletable_id = walletable['id']
+      next if walletable_id == 4410
       query = "date < \"#{month.next.date.to_s}\" and walletable_id = #{walletable_id} order by date desc limit 1"
       record = @kntn.api.records.get(@apps[:freee], query, [])['records']
       b = record.present? ? record.first['balance']['value'].to_i : 0
-      puts "#{walletable['name']}: #{b}"
+      disp = "#{walletable['name']}: #{b}"
+      breakdown += "#{disp}\n"
       balance += b
     end
-    balance
+    {balance: balance, breakdown: breakdown}
   end
 
   def active? month, future

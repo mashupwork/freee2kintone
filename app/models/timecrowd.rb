@@ -4,8 +4,7 @@ class Timecrowd
   def self.setting
     {
       site: 'https://timecrowd.net',
-      #model_names: ['Task', 'TimeEntry']
-      model_names: ['TimeEntry']
+      model_names: ['TimeEntry', 'Task']
     }
   end
 
