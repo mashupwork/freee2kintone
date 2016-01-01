@@ -41,21 +41,36 @@ class Kntn
     @api.records.get(@app_id, query, [])
   end
 
-  def save record
-    params = {}
-    record.each do |k, v|
-      params[k] = {value: v}
+  def save pre_params, unique_key=nil
+    if unique_key
+      cond = {}
+      cond[unique_key] = pre_params[unique_key]
+      records = where(cond)['records']
+      if records.present?
+        id = records.first['$id']['value'].to_i
+        return update(id, pre_params)
+      end
     end
-    begin
-      @api.record.register(@app_id, params)
-    rescue
-      sleep 5
-      save record
-    end
+    create(pre_params)
   end
 
-  def save! record
-    res = save(record)
+  def create pre_params
+    params = {}
+    pre_params.each do |k, v|
+      params[k] = {value: v}
+    end
+
+    begin
+      res = @api.record.register(@app_id, params)
+    rescue
+      sleep 5
+      save pre_params
+    end
+    res
+  end
+
+  def save! record, unique_key=nil
+    res = save(record, unique_key)
     res['message'] ? raise(res.inspect) : res
   end
 

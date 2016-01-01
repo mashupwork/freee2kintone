@@ -42,7 +42,7 @@ class Month
   def balance
     res = @kntn.where(year_month: @date)['records']
     if res.present?
-      res['records'].first['balance']['value'].to_i
+      res.first['balance']['value'].to_i
     else
       @cf.balance_from_freee(self)
     end

@@ -65,9 +65,7 @@ class Cf
         balance = month.previous.balance || 0
       end
       futures.each do |f|
-        from = f['year_month_start']['value'].to_date
-        to   = f['year_month_end']['value'].to_date
-        if from <= day && to >= day
+        if active?(month, f)
           amount = f['amount']['value'].to_i
           balance += amount
           if amount > 0
@@ -86,7 +84,6 @@ class Cf
     helper =  ActionController::Base.helpers
     record_title = "#{year_month.to_s.gsub(/_01$/, '')}: "
     record_title += helper.number_with_delimiter(balance)
-    puts "balance is #{balance}"
     record = {
       record_title: record_title,
       year_month: year_month,
@@ -96,7 +93,7 @@ class Cf
       breakdown:  breakdown
     }
     puts record.inspect
-    @kntn.app(@apps[:all]).save!(record)
+    @kntn.app(@apps[:all]).save!(record, :year_month)
     balance
   end
 
@@ -104,6 +101,18 @@ class Cf
     query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
     record = @kntn.api.records.get(@apps[:freee], query, [])['records']
     record.present? ? record.first['balance']['value'].to_i : 0
+  end
+
+  def active? month, future
+    day = month.date
+    from = future['year_month_start']['value'].to_date
+    to   = future['year_month_end']['value'].to_date
+    loop_type = future['loop_type']['value']
+    return false unless (from <= day && to >= day) # 期間外
+    return true if ['毎月', '単発'].include?(loop_type)
+    return true if loop_type == '毎年' && day.month == from.month
+    return true if loop_type == '半年毎' && [from.month, (from+6.month).month].include?(day.month)
+    return false
   end
 end
 
