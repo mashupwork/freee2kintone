@@ -8,7 +8,8 @@ class Kntn
   end
 
   def self.app_create!(name, fields=nil)
-    @api.app.register(name, fields)
+    k = self.new
+    k.api.app.register(name, fields)
   end
 
   def self.remove(app_id)
@@ -59,7 +60,6 @@ class Kntn
     pre_params.each do |k, v|
       params[k] = {value: v}
     end
-
     begin
       res = @api.record.register(@app_id, params)
     rescue

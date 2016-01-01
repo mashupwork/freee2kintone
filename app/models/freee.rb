@@ -11,7 +11,8 @@ class Freee
       authorize_url: '/oauth/authorize',
       token_url: '/oauth/token',
       #model_names: ['WalletTxn', 'Walletable', 'Deal', 'Bank']
-      model_names: ['WalletTxn']
+      #model_names: ['WalletTxn']
+      model_names: ['Walletable']
     }
   end
 
@@ -66,6 +67,8 @@ class Freee
     case model_name
     when 'WalletTxn'
       kntn_loop('wallet_txns', {offset: offset})
+    when 'Walletable'
+      kntn_loop('walletables', {is_all: true})
     end
   end
 
@@ -82,6 +85,10 @@ class Freee
       end
       i2
     end
+  end
+
+  def walletables prams = {}
+    fetch("/api/1/walletables.json?company_id=#{company_id}")['walletables']
   end
 
   def company_id
