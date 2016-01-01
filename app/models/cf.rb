@@ -6,34 +6,37 @@ class Cf
       future: ENV['KINTONE_CF_FUTURE'],
       all:    ENV['KINTONE_CF_ALL']
     }
+    @freee_walletable_id = 4409 #TODO freee APIで walletable_type=bank_accountのものを自動取得する
   end
 
   def sync (refresh=false)
     remove if refresh
-    last_balance = sync_pasts
-    sync_futures(last_balance)
+    previous_balance = sync_pasts
+    sync_futures(previous_balance)
   end
 
   def remove
-    @kntn.remove(@app[:all])
+    Kntn.remove(@apps[:all])
   end
 
-  def sync_futures(last_balance=nil)
+  def sync_futures(previous_balance=nil)
+    previous_balance ||= Month.new.previous.balance
     month = Month.new
     final_month = Month.new(2017, 3)
     while(month.future?(final_month))
-      last_balance = save_future(month, last_balance)
+      previous_balance = save_future(
+        month, previous_balance
+      )
       month = month.next
     end
   end
 
   def sync_pasts
-    balance = 0
-    2008.upto(2016).each do |y|
-      1.upto(12).each do |m|
-        next if Date.new(y, m, 1) >= Date.today
-        balance = save_past(y, m)
-      end
+    month = Month.new(2008, 12)
+    final_month = Month.new.previous # 今月は未来なので先月まで
+    while(month.future?(final_month))
+      balance = save_past(month)
+      month = month.next
     end
     balance
   end
@@ -42,50 +45,65 @@ class Cf
     @kntn.app(@apps[:future]).all
   end
 
-  def save_future month, last_balance=nil
-    save 'future', month, last_balance
+  def save_future month, previous_balance=nil
+    save 'future', month, previous_balance
   end
 
-  def save_past month, last_balance=nil
-    save 'past', month, last_balance
+  def save_past month
+    save 'past', month, nil
   end
 
-  def save type='future', month, last_balance
-    puts "#{month.year}-#{month.month}: #{last_balance}"
+  def save type='future', month, previous_balance
+    puts "#{month.year_month}: #{previous_balance}"
     day = month.date
     breakdown = ''
-    if last_balance
-      balance = last_balance
-    else
-      balance = month.last.balance || 0
-    end
-
-    if future?
+    income = expense = 0
+    if Month.new.future?(month)
+      if previous_balance
+        balance = previous_balance
+      else
+        balance = month.previous.balance || 0
+      end
       futures.each do |f|
         from = f['year_month_start']['value'].to_date
-        to   = f['year_month_end']['value']
-        to   = to.to_date if to
-        balance += f['amount']['value'].to_i if from <= day && (to.nil? || to > day)
-        breakdown += "#{f['memo']['memo']}: #{f['amount']['value']}\n"
+        to   = f['year_month_end']['value'].to_date
+        if from <= day && to >= day
+          amount = f['amount']['value'].to_i
+          balance += amount
+          if amount > 0
+            income += amount
+          else
+            expense += amount
+          end
+          breakdown += "#{f['memo']['value']}: #{amount}\n"
+        end
       end
     else # past
-      next_day = (day + 1.month).beginning_of_month
-      query = "date < \"#{next_day}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
-      record = @kntn.api.records.get(@apps[:freee], query, [])
-      return if record['records'].blank?
-      balance = record['records'].first['balance']['value']
+      balance = balance_from_freee(month)
     end
 
     year_month =  day.to_s
     helper =  ActionController::Base.helpers
+    record_title = "#{year_month.to_s.gsub(/_01$/, '')}: "
+    record_title += helper.number_with_delimiter(balance)
+    puts "balance is #{balance}"
     record = {
-      record_title: {value: "#{year_month.to_s.gsub(/_01$/, '')}: #{helper.number_with_delimiter(balance)}"},
-      year_month: {value: year_month},
-      balance: {value: balance},
-      breakdown: {value: breakdown}
+      record_title: record_title,
+      year_month: year_month,
+      balance:    balance,
+      income:    income,
+      expense:    expense,
+      breakdown:  breakdown
     }
-    @kntn.api.record.register(@apps[:all], record)
+    puts record.inspect
+    @kntn.app(@apps[:all]).save!(record)
     balance
+  end
+
+  def balance_from_freee month
+    query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
+    record = @kntn.api.records.get(@apps[:freee], query, [])['records']
+    record.present? ? record.first['balance']['value'].to_i : 0
   end
 end
 

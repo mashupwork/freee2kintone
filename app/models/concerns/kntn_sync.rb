@@ -107,7 +107,7 @@ module KntnSync
       self.setting[:model_names].each do |model_name|
         unless @kntn 
           instance = self.new
-          id = Kntn.create!("#{self.to_s}::#{model_name}", instance.field_names(model_name))[:app]
+          id = Kntn.app_create!("#{self.to_s}::#{model_name}", instance.field_names(model_name))[:app]
           self.set "kintone_app_#{model_name.underscore.pluralize}", id
         end
         i = self.new
