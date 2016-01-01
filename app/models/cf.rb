@@ -6,7 +6,6 @@ class Cf
       future: ENV['KINTONE_CF_FUTURE'],
       all:    ENV['KINTONE_CF_ALL']
     }
-    @freee_walletable_id = 4409 #TODO freee APIで walletable_type=bank_accountのものを自動取得する
   end
 
   def sync (refresh=false)
@@ -98,9 +97,14 @@ class Cf
   end
 
   def balance_from_freee month
-    query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{@freee_walletable_id} order by date desc limit 1"
-    record = @kntn.api.records.get(@apps[:freee], query, [])['records']
-    record.present? ? record.first['balance']['value'].to_i : 0
+    balance = 0
+    Freee.new.walletables.each do |walletable|
+      walletable_id = walletable['id']
+      query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{walletable_id} order by date desc limit 1"
+      record = @kntn.api.records.get(@apps[:freee], query, [])['records']
+      balance += record.present? ? record.first['balance']['value'].to_i : 0
+    end
+    balance
   end
 
   def active? month, future
