@@ -121,7 +121,7 @@ class Cf
     return false unless (from <= day && to >= day) # 期間外
     return false if loop_type.match(/来月以降/) && day == Month.new.date # 今月はfalse
     return false if loop_type.match(/再来月以降/) && day == Month.new.next.date # 来月もfalse
-    return true if ['毎月', '単発'].include?(loop_type)
+    return true if loop_type.match('毎月') || loop_type =='単発'
     return true if loop_type == '毎年' && day.month == from.month
     return true if loop_type == '半年毎' && [from.month, (from+6.month).month].include?(day.month)
     return false

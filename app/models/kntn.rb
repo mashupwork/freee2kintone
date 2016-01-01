@@ -20,6 +20,10 @@ class Kntn
     @api
   end
 
+  def find id
+    @api.record.get(@app_id, id)['record']
+  end
+
   def app(app_id)
     @app_id = app_id
     self
