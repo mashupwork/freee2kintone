@@ -12,6 +12,19 @@ class Freee
     }
   end
 
+  def self.kntn2wallet_txn(app_id, walletable_id)
+    data = {}
+    Kntn.new(Freee.get("kintone_app_#{wallet_txns}")).all.each do |record|
+      data[record['id']['value']] = true
+    end
+
+    Kntn.new(app_id).all.each do |record|
+      next if data[record['id']['value']]
+      # TODO
+      post('/api/1/wallet_txns.json', params)
+    end
+  end
+
   def api(code=nil, callback_url=nil)
     client = OAuth2::Client.new(
       ENV['FREEE_KEY'],

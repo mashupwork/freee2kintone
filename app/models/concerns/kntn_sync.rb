@@ -145,6 +145,10 @@ module KntnSync
       end
     end
 
+    def post url, params
+      access_token.post(url, params).parsed
+    end
+
     def field_names model_name
       key = model_name.underscore.pluralize
       items = eval(key)
