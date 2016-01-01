@@ -1,8 +1,12 @@
 class Cf
+  def self.sync
+    self.new.sync
+  end
+
   def initialize
     @kntn = Kntn.new
     @apps = {
-      freee:  Freee.kintone_id,
+      freee:  Freee.get('kintone_app_wallet_txns'),
       future: ENV['KINTONE_CF_FUTURE'],
       all:    ENV['KINTONE_CF_ALL']
     }
@@ -100,9 +104,11 @@ class Cf
     balance = 0
     Freee.new.walletables.each do |walletable|
       walletable_id = walletable['id']
-      query = "date < \"#{month.next.date.beginning_of_month.to_s}\" and walletable_id = #{walletable_id} order by date desc limit 1"
+      query = "date < \"#{month.next.date.to_s}\" and walletable_id = #{walletable_id} order by date desc limit 1"
       record = @kntn.api.records.get(@apps[:freee], query, [])['records']
-      balance += record.present? ? record.first['balance']['value'].to_i : 0
+      b = record.present? ? record.first['balance']['value'].to_i : 0
+      puts "#{walletable['name']}: #{b}"
+      balance += b
     end
     balance
   end
