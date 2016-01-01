@@ -4,6 +4,7 @@ class Timecrowd
   def self.setting
     {
       site: 'https://timecrowd.net',
+      #model_names: ['MonthlyReport', 'TimeEntry', 'Task']
       model_names: ['TimeEntry', 'Task']
     }
   end
@@ -15,6 +16,10 @@ class Timecrowd
     when 'Task'
       teams.each do |team|
         kntn_loop('tasks', {team_id: team['id'], page: 1})
+      end
+    when 'MonthlyReport'
+      teams.each do |team|
+        kntn_loop('monthly_reports', {team_id: team['id'], page: 1})
       end
     end
   end
@@ -36,6 +41,12 @@ class Timecrowd
   def time_entries params = {}
     page = params[:page] || 1
     fetch "/api/v1/time_entries?page=#{page}"
+  end
+
+  def monthly_reports params = {}
+    team_id = params[:team_id] || teams.first['id']
+    page    = params[:page] || 1
+    fetch "/api/v1/teams/#{team_id}/monthly_report?page=#{page}"
   end
 end
 
