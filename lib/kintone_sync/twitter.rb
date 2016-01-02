@@ -19,6 +19,7 @@ module KintoneSync
       end
       #@client.user_timeline("pandeiro245")
       @client.home_timeline
+      #@client.search("kintone", result_type: "recent", lang: "ja")
     end
   end
 end

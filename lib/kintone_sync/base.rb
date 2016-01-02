@@ -39,7 +39,7 @@ module KintoneSync
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
           app_id = get "kintone_app_#{model_name.downcase}"
-          @kntn.app(app_id).save!(record)
+          @kntn.app(app_id).save(record)
         end
         params[:page] += 1 if params[:page]
         params[:offset] += items.count if params[:offset]
@@ -48,6 +48,8 @@ module KintoneSync
           data = fetch(next_page)
           items = data['data']
           next_page = data['paging'].present? ? data['paging']['next'] : nil
+        elsif self.class == Twitter
+          # do nothing
         else
           items = self.send(model_name, params)
         end
