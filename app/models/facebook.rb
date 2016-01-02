@@ -4,24 +4,36 @@ class Facebook
   def self.setting
     {
       site: 'https://graph.facebook.com/v2.5/',
-      model_names: ['Feed', 'Event', 'Like']
+      model_names: ['Group', 'Feed', 'Event', 'Like']
     }
   end
 
   def me
     fetch "/me"
   end
+
+  def mine key
+    fetch("/#{me['id']}/#{key}")
+  end
  
   def likes params = {}
-    fetch("/#{me['id']}/likes")
+    mine 'likes'
   end
 
   def events params = {}
-    fetch("/#{me['id']}/events")
+    mine 'events'
+  end
+
+  def friends params = {}
+    mine 'friends'
   end
 
   def feeds params = {}
-    fetch("/#{me['id']}/feed")
+    mine 'feed'
+  end
+
+  def groups params = {}
+    mine 'groups'
   end
 end
 
