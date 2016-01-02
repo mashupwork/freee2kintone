@@ -2,11 +2,12 @@ module KintoneSync
   class Twitter
     include KintoneSync::Base
 
-    def self.setting
-      {
-        site: 'https://api.twitter.com/',
-        model_names: ['Tweet']
-      }
+    def self.setting # FIXME
+      {model_names: ['Tweet']}
+    end
+
+    def setting
+      {model_names: ['Tweet']}
     end
 
     def tweets params = {}
@@ -16,7 +17,8 @@ module KintoneSync
         config.access_token    = get('token')
         config.access_token_secret = get('secret')
       end
-      @client.user_timeline("pandeiro245")
+      #@client.user_timeline("pandeiro245")
+      @client.home_timeline
     end
   end
 end

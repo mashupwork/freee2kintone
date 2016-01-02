@@ -19,13 +19,11 @@ module KintoneSync
 
     def access_token
       token = self.class.get 'token'
-      #secret = self.class.get 'secret'
-      #OAuth2::AccessToken.new(@client, token, secret)
       OAuth2::AccessToken.new(@client, token)
     end
 
     def kntn_loop(model_name, params={})
-      @kntn = Kntn.new(self.class.get("kintone_app_#{model_name.underscore.pluralize}")) unless @kntn
+      @kntn = Kntn.new(get("kintone_app_#{model_name.underscore.pluralize}")) unless @kntn
 
       if self.class == Facebook
         data = self.send(model_name, params)
@@ -40,8 +38,8 @@ module KintoneSync
           record = item2record(item)
           name = item['name'] || item['title'] || item['description'] || item['id'] || '名称不明'
           puts "#{i}: saving #{name}"
-          app_id = self.class.get "kintone_app_#{model_name.downcase}"
-          @kntn.app(app_id).save(record)
+          app_id = get "kintone_app_#{model_name.downcase}"
+          @kntn.app(app_id).save!(record)
         end
         params[:page] += 1 if params[:page]
         params[:offset] += items.count if params[:offset]
@@ -58,32 +56,38 @@ module KintoneSync
 
     def item2record item
       record = {}
-      item.each do |key, val|
+      item.to_hash.each do |key, val|
         begin
-          if key.match(/_at$/) && val.to_i > 0 # timecrowd
-            val = Time.at(val.to_i)
-            record[key] = val
-          elsif key.match(/_time$/) # facebook
-            val = val.to_datetime
-            record[key] = val
-          elsif key.match(/^is_/)
-            val = val == true ? 1 : 0
-            record[key] = val
-          elsif val.class == Hash
+          if val.class == Hash
             val.each do |k, v|
-              record["#{key}_#{k}"] = val[k]
-              #record["#{k}"] = val[k] # https://github.com/pandeiro245/freee2kintone/issues/62
+              record["#{key}_#{k}"] = typed_val(k, v)
             end
           else
-            record[key] = val
+            record[key] = typed_val(key, val)
           end
-        rescue
+        rescue=>e
           puts "key is below"
           puts key.inspect
-          raise val.inspect
+          puts val.inspect
+          raise e.inspect
         end
       end
       record
+    end
+
+    def typed_val key, val
+      if key.match(/_at$/)
+        if val.to_i > 0 # timecrowd
+          val = Time.at(val.to_i)
+        else
+          val = val.to_datetime
+        end
+      elsif key.match(/_time$/) # facebook
+        val = val.to_datetime
+      elsif key.match(/^is_/)
+        val = val == true ? 1 : 0
+      end
+      val
     end
 
     def item2type key, val
@@ -91,7 +95,7 @@ module KintoneSync
         'DATETIME'
       elsif key.match(/_on$/) || key == 'date'
         'DATE'
-      elsif val.class == Fixnum || key == 'duration'
+      elsif !key.match(/id$/) && (val.class == Fixnum || key == 'duration') # idを数値にするとtweet_idなどが桁数オーバーするので文字列にする
         'NUMBER'
       else
         'SINGLE_LINE_TEXT'
@@ -100,7 +104,7 @@ module KintoneSync
 
     def item2field_names item
       res = {}
-      item.each do |key, val|
+      item.to_hash.each do |key, val|
         if val.class == Hash
           val.each do |k, v|
             key2 = "#{key}_#{k}"
@@ -116,37 +120,35 @@ module KintoneSync
             label: key, 
             type: item2type(key, val)
           }
-          res[key][:unique] = true if key == 'id'
+          res[key][:unique] = true if key == :id
         end
       end
       res 
     end
 
-    def self.sync(refresh=false)
+    def sync(refresh=false)
       self.setting[:model_names].each do |model_name|
         unless self.exist?("kintone_app_#{model_name.underscore.pluralize}")
-          instance = self.new
           id = Kntn.app_create!(
-            "#{self.to_s}::#{model_name}", 
-            instance.field_names(model_name)
+            "#{self.class.to_s.split('::').last}::#{model_name}", 
+            field_names(model_name)
           )[:app]
           self.set "kintone_app_#{model_name.underscore.pluralize}", id
         end
-        i = self.new
-        i.remove(model_name) if refresh
-        i.sync(model_name)
+        self.remove(model_name) if refresh
+        self.sync_a_model(model_name)
       end
     end
 
-    def sync model_name
-      if self.class.instance_methods.include?(:sync)
+    def sync_a_model model_name
+      if self.class.instance_methods.include?(:sync_a_model)
         kntn_loop(model_name.underscore.pluralize)
       else
         super
       end
     end
 
-    def self.remove
+    def remove
       id = ENV["#{self.to_s.upcase}_KINTONE_APP"].to_i
       id = 20
       Kntn.new(id).remove
