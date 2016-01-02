@@ -61,7 +61,7 @@ module KntnSync
         if next_page
           data = fetch(next_page)
           items = data['data']
-          next_page = data['paging']['next']
+          next_page = data['paging'].present? ? data['paging']['next'] : nil
         else
           items = self.send(model_name, params)
         end
