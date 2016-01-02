@@ -52,8 +52,11 @@ module KntnSync
     def item2record item
       record = {}
       item.each do |key, val|
-        if key.match(/_at$/) && val.to_i > 0
+        if key.match(/_at$/) && val.to_i > 0 # timecrowd
           val = Time.at(val.to_i)
+          record[key] = val
+        elsif key.match(/_time$/) # facebook
+          val = val.to_datetime
           record[key] = val
         elsif key.match(/^is_/)
           val = val == true ? 1 : 0
@@ -71,7 +74,7 @@ module KntnSync
     end
 
     def item2type key, val
-      if key.match(/_at$/)
+      if key.match(/_at$/) || key.match(/_time$/)
         'DATETIME'
       elsif key.match(/_on$/) || key == 'date'
         'DATE'
