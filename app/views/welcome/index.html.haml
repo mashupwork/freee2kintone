@@ -37,8 +37,9 @@
         - else
           = link_to 'not synced', "/auth/#{provider}"
       %td
-        - model_names = provider.capitalize.constantize.setting[:model_names]
-        = model_names ? model_names.join(' ,') : ''
+        - if false
+          - model_names = provider.capitalize.constantize.setting[:model_names]
+          = model_names ? model_names.join(' ,') : ''
 
       - if File.exist?("tmp/#{provider}_kintone_app.txt")
         - id = File.read("tmp/#{provider}_kintone_app.txt")
