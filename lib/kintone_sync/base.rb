@@ -1,10 +1,8 @@
-module KntnSync
-  extend ActiveSupport::Concern
-  included do
+module KintoneSync
+  module Base
     def initialize
       setting = self.class.setting
       upcase = self.class.to_s.upcase
-      downcase = self.class.to_s.downcase
       @client = OAuth2::Client.new(
         ENV["#{upcase}_KEY"],
         ENV["#{upcase}_SECRET"],
@@ -13,22 +11,10 @@ module KntnSync
         #token_url: setting[:token_url],
         #ssl: { verify: false }
       )
-      if self.class.exist? downcase
-        id = self.class.get downcase
-        @kntn = Kntn.new(id)
-      end
     end
 
     def kntn
       @kntn
-    end
-
-    def sync model_name
-      if self.class.instance_methods.include?(:sync)
-        kntn_loop(model_name.underscore.pluralize)
-      else
-        super
-      end
     end
 
     def access_token
@@ -152,6 +138,14 @@ module KntnSync
       end
     end
 
+    def sync model_name
+      if self.class.instance_methods.include?(:sync)
+        kntn_loop(model_name.underscore.pluralize)
+      else
+        super
+      end
+    end
+
     def self.remove
       id = ENV["#{self.to_s.upcase}_KINTONE_APP"].to_i
       id = 20
@@ -182,16 +176,16 @@ module KntnSync
       item2field_names(item)
     end
 
-    def self.exist? key
-      File.exist?("tmp/#{self.to_s.downcase}_#{key}.txt")
+    def exist? key
+      File.exist?("tmp/#{self.class.to_s.split('::').last.downcase}_#{key}.txt")
     end
 
-    def self.get key
-      File.open("tmp/#{self.to_s.downcase}_#{key}.txt", 'r').read
+    def get key
+      File.open("tmp/#{self.class.to_s.split('::').last.downcase}_#{key}.txt", 'r').read
     end
 
-    def self.set key, val
-      File.open("tmp/#{self.to_s.downcase}_#{key}.txt", 'w') { |file| file.write(val) }
+    def set key, val
+      File.open("tmp/#{self.class.to_s.split('::').last.downcase}_#{key}.txt", 'w') { |file| file.write(val) }
     end
   end
 end

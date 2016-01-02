@@ -27,7 +27,7 @@ end
 gem 'dotenv-rails'
 gem 'haml'
 gem 'require_reloader'
-gem "twitter-bootstrap-rails"
+gem 'twitter-bootstrap-rails'
 
 #gem 'kintone'
 #gem 'kintone', path: '../kintone'
@@ -50,5 +50,8 @@ gem 'omniauth-ruffnote', github: 'ruffnote/omniauth-ruffnote'
 #gem 'omniauth-misoca', path: '../omniauth-misoca'
 #gem 'omniauth-misoca', github: 'pandeiro245/omniauth-misoca'
 gem 'omniauth-facebook'
+gem 'omniauth-twitter'
 
 gem 'omniauth-github'
+
+gem 'twitter'

@@ -42,7 +42,7 @@ class SessionsController < ApplicationController
 
   private
     def save_token provider, auth_hash
-      %w(expires_at refresh_token token).each do |key|
+      %w(expires_at refresh_token token secret).each do |key|
         val = auth_hash.credentials.send(key)
         File.open("tmp/#{provider}_#{key}.txt", 'w') { |file| file.write(val) }
       end
