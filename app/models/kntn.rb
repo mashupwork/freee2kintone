@@ -34,8 +34,17 @@ class Kntn
   end
 
   def all
-    res = @api.records.get(@app_id, '', [])
-    res['records'].presence
+    res = []
+    offset = 0
+    query = "offset #{offset}"
+    items = @api.records.get(@app_id, query, [])
+    while(items['records'].present?)
+      res += items['records']
+      offset += items['records'].count
+      query = "offset #{offset}"
+      items = @api.records.get(@app_id, query, [])
+    end
+    res
   end
 
   def where cond
