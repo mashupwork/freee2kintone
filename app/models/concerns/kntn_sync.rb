@@ -17,11 +17,18 @@ module KntnSync
         id = self.class.get downcase
         @kntn = Kntn.new(id)
       end
-      @record_count = 0
     end
 
     def kntn
       @kntn
+    end
+
+    def sync model_name
+      if self.class.instance_methods.include?(:sync)
+        kntn_loop(model_name.underscore.pluralize)
+      else
+        super
+      end
     end
 
     def access_token
@@ -31,8 +38,15 @@ module KntnSync
 
     def kntn_loop(model_name, params={})
       @kntn = Kntn.new(self.class.get("kintone_app_#{model_name.underscore.pluralize}")) unless @kntn
-      items = self.send(model_name, params)
-      @record_count += items.count
+
+      if self.class == Facebook
+        data = self.send(model_name, params)
+        items = data['data']
+        next_page = data['paging']['next']
+      else
+        items = self.send(model_name, params)
+      end
+
       while items.present?
         items.each_with_index do |item, i|
           record = item2record(item)
@@ -43,35 +57,49 @@ module KntnSync
         end
         params[:page] += 1 if params[:page]
         params[:offset] += items.count if params[:offset]
-        self.class.set 'kintone_count', @record_count
         return if params[:is_all]
-        items = self.send(model_name, params)
+        if next_page
+          data = fetch(next_page)
+          items = data['data']
+          next_page = data['paging'].present? ? data['paging']['next'] : nil
+        else
+          items = self.send(model_name, params)
+        end
       end
     end
 
     def item2record item
       record = {}
       item.each do |key, val|
-        if key.match(/_at$/) && val.to_i > 0
-          val = Time.at(val.to_i)
-          record[key] = val
-        elsif key.match(/^is_/)
-          val = val == true ? 1 : 0
-          record[key] = val
-        elsif val.class == Hash
-          val.each do |k, v|
-            record["#{key}_#{k}"] = val[k]
-            #record["#{k}"] = val[k] # https://github.com/pandeiro245/freee2kintone/issues/62
+        begin
+          if key.match(/_at$/) && val.to_i > 0 # timecrowd
+            val = Time.at(val.to_i)
+            record[key] = val
+          elsif key.match(/_time$/) # facebook
+            val = val.to_datetime
+            record[key] = val
+          elsif key.match(/^is_/)
+            val = val == true ? 1 : 0
+            record[key] = val
+          elsif val.class == Hash
+            val.each do |k, v|
+              record["#{key}_#{k}"] = val[k]
+              #record["#{k}"] = val[k] # https://github.com/pandeiro245/freee2kintone/issues/62
+            end
+          else
+            record[key] = val
           end
-        else
-          record[key] = val
+        rescue
+          puts "key is below"
+          puts key.inspect
+          raise val.inspect
         end
       end
       record
     end
 
     def item2type key, val
-      if key.match(/_at$/)
+      if key.match(/_at$/) || key.match(/_time$/)
         'DATETIME'
       elsif key.match(/_on$/) || key == 'date'
         'DATE'
@@ -84,8 +112,7 @@ module KntnSync
 
     def item2field_names item
       res = {}
-      item.keys.each do |key|
-        val = item[key]
+      item.each do |key, val|
         if val.class == Hash
           val.each do |k, v|
             key2 = "#{key}_#{k}"
@@ -147,6 +174,7 @@ module KntnSync
     def field_names model_name
       key = model_name.underscore.pluralize
       items = eval(key)
+      items = items['data'] if self.class == Facebook
       return nil unless items.present?
       item = items.first
       item2field_names(item)
